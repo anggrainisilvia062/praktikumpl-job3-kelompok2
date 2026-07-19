@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantau Cuaca • Premium Dashboard</title>
+
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ========== ANIMASI & EFEK COSMIC ========== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes slowBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-slow-bounce { animation: slowBounce 3s ease-in-out infinite; }
+
+        @keyframes softPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.15); }
+        }
+        .animate-soft-pulse { animation: softPulse 8s ease-in-out infinite; }
+
+        @keyframes spin-custom { to { transform: rotate(360deg); } }
+        .animate-spin-custom { animation: spin-custom 1s linear infinite; }
+
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+        .animate-float { animation: float-slow 6s ease-in-out infinite; }
+
+        /* ========== GLASSMORPHISM EFFECTS ========== */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card-inner {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card-inner:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Ambient Orbs */
+        .orb { position: fixed; border-radius: 9999px; filter: blur(100px); pointer-events: none; z-index: 0; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 20px; }
+    </style>
+</head>
+
+<body id="mainBody" class="min-h-screen flex items-center justify-center p-4 md:p-8 text-white transition-all duration-1000 ease-in-out font-sans overflow-x-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);">
+
+    <!-- Latar Belakang Orb Bercahaya (Cosmic Theme) -->
+    <div class="orb w-[350px] h-[350px] top-[-50px] left-[-50px] animate-soft-pulse bg-indigo-600/30" style="animation-delay: 0s;"></div>
+    <div class="orb w-[400px] h-[400px] bottom-[-100px] right-[-50px] animate-soft-pulse bg-purple-600/20" style="animation-delay: -3s;"></div>
+    <div class="orb w-[300px] h-[300px] top-[40%] left-[50%] animate-soft-pulse bg-amber-500/15" style="animation-delay: -5s;"></div>
+
+    <div class="relative z-10 w-full max-w-5xl my-4">
+        
+        <!-- BAR PENCARIAN (Top Center) -->
+        <div class="w-full max-w-md mx-auto mb-6 flex gap-2">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="cityInput" placeholder="Cari kota dunia... (cth: London, Tokyo)" class="w-full pl-11 pr-4 py-3 rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white/15 text-white placeholder-gray-400 transition-all text-sm shadow-inner" />
+            </div>
+            <button id="searchBtn" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white px-5 py-3 rounded-2xl font-medium transition-all text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer">
+                <i class="fa-solid fa-search"></i>
+                <span class="hidden sm:inline">Cari</span>
+            </button>
+        </div>
+
+        <!-- ==================== AWALAN / INITIAL STATE PANEL ==================== -->
+        <div id="initialState" class="glass-panel rounded-3xl p-8 text-center max-w-md mx-auto animate-fade-in-up relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent"></div>
+            <div class="my-6 inline-block relative">
+                <div class="absolute inset-0 bg-indigo-500/20 rounded-full blur-xl scale-125"></div>
+                <i class="fa-solid fa-earth-asia text-6xl text-indigo-400 animate-float relative z-10"></i>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white via-gray-100 to-indigo-200 bg-clip-text text-transparent">Eksplorasi Cuaca Global</h2>
+            <p class="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">
+                Masukkan nama kota di atas untuk menyelaraskan radar dan memantau metrik atmosfer secara langsung dan real-time.
+            </p>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div id="loading" class="hidden text-center py-12 glass-panel rounded-3xl max-w-md mx-auto">
+            <i class="fa-solid fa-spinner animate-spin-custom text-indigo-400 text-4xl mb-3"></i>
+            <p class="text-gray-300 font-medium text-sm">Menyelaraskan data atmosfer...</p>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div id="errorMessage" class="hidden bg-red-500/10 border border-red-500/30 backdrop-blur-md text-red-200 px-6 py-5 rounded-3xl max-w-md mx-auto text-center animate-fade-in-up">
+            <i class="fa-solid fa-circle-exclamation text-red-400 text-2xl mb-2 block"></i>
+            <p class="font-semibold text-sm">Gagal Memuat Data</p>
+            <p id="errorText" class="text-xs text-gray-400 mt-1">Kota tidak ditemukan atau masalah jaringan.</p>
+        </div>
+
+        <!-- DASHBOARD MULTI-PANEL (Muncul setelah data berhasil dimuat) -->
+        <div id="weatherResult" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6 animate-fade-in-up">
+            
+            <!-- PANEL KIRI: RINGKASAN UTAMA -->
+            <div class="glass-panel md:col-span-5 rounded-3xl p-6 sm:p-8 flex flex-col justify-between items-center text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                
+                <div class="w-full">
+                    <span class="px-3 py-1 bg-white/10 rounded-full text-[11px] font-medium tracking-wider uppercase inline-block mb-3 border border-white/5">Kondisi Saat Ini</span>
+                    <h2 id="cityName" class="text-2xl sm:text-3xl font-extrabold tracking-tight drop-shadow-sm">--</h2>
+                    <p id="weatherDesc" class="text-gray-300 capitalize text-sm mt-1">--</p>
+                </div>
+
+                <div class="my-6 relative flex items-center justify-center w-full">
+                    <img id="weatherIcon" src="" alt="Cuaca" class="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-[0_15px_15px_rgba(255,255,255,0.1)] animate-slow-bounce" />
+                    <div class="absolute w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl -z-10"></div>
+                </div>
+
+                <div class="w-full">
+                    <div class="flex justify-center items-start">
+                        <span id="temp" class="text-7xl sm:text-8xl font-black tracking-tighter drop-shadow-md">--</span>
+                        <span class="text-3xl font-bold text-indigo-300 mt-2 ml-1">°C</span>
+                    </div>
+                    <p class="text-gray-400 text-xs mt-2">
+                        Sensasi Termal: <span id="feelsLike" class="font-semibold text-white">--</span>°C
+                    </p>
+                </div>
+            </div>
+
+            <!-- PANEL KANAN: DETAIL METRIK EKSTENSI -->
+            <div class="glass-panel md:col-span-7 rounded-3xl p-6 sm:p-8 flex flex-col justify-between">
+                
+                <!-- Overview Lingkungan -->
+                <div>
+                    <h3 class="text-xs font-bold tracking-widest text-indigo-300 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-simple text-[10px]"></i> Environment Overview
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20"><i class="fa-solid fa-droplet text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Kelembaban</p>
+                                <p id="humidity" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20"><i class="fa-solid fa-wind text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Kecepatan Angin</p>
+                                <p id="windSpeed" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/20"><i class="fa-solid fa-gauge-high text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Tekanan udara</p>
+                                <p id="pressure" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20"><i class="fa-solid fa-eye text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Visibilitas</p>
+                                <p id="visibility" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20"><i class="fa-solid fa-temperature-half text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Suhu Max/Min</p>
+                                <p id="tempMinMax" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card-inner p-3.5 rounded-2xl flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20"><i class="fa-solid fa-cloud text-sm"></i></div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Tutupan Awan</p>
+                                <p id="clouds" class="text-sm font-bold">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gerak Surya (Sunrise & Sunset) -->
+                <div class="border-t border-white/10 pt-4 mt-2">
+                    <h3 class="text-xs font-bold tracking-widest text-amber-400 uppercase mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-half-stroke text-[10px]"></i> Efemeris Surya & Waktu Lokal
+                    </h3>
+                    <div class="glass-card-inner rounded-2xl p-4 flex justify-around items-center text-center">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-sun text-amber-400 text-xl animate-pulse"></i>
+                            <div class="text-left">
+                                <p class="text-[9px] text-gray-400 uppercase tracking-wider">Terbit (Waktu Lokal)</p>
+                                <p id="sunrise" class="text-base font-bold text-gray-100">--:--</p>
+                            </div>
+                        </div>
+                        <div class="h-8 w-[1px] bg-white/10"></div>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-moon text-indigo-400 text-xl"></i>
+                            <div class="text-left">
+                                <p class="text-[9px] text-gray-400 uppercase tracking-wider">Terbenam (Waktu Lokal)</p>
+                                <p id="sunset" class="text-base font-bold text-gray-100">--:--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waktu Sinkronisasi -->
+                <div class="text-right mt-4">
+                    <p class="text-[10px] text-gray-400 italic" id="updateTime">Terakhir diperbarui: --:--</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========== LOGIKA INTEGRASI API ========== -->
+    <script>
+        (function() {
+            const API_KEY = '34318a7bd4f5ba2667edd7205d619122';
+            const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
+
+            // REFERENSI DOM
+            const mainBody = document.getElementById('mainBody');
+            const cityInput = document.getElementById('cityInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const weatherResult = document.getElementById('weatherResult');
+            const initialStateEl = document.getElementById('initialState'); // Elemen Baru
+
+            const cityNameEl = document.getElementById('cityName');
+            const weatherDescEl = document.getElementById('weatherDesc');
+            const weatherIconEl = document.getElementById('weatherIcon');
+            const tempEl = document.getElementById('temp');
+            const feelsLikeEl = document.getElementById('feelsLike');
+            const humidityEl = document.getElementById('humidity');
+            const windSpeedEl = document.getElementById('windSpeed');
+            const pressureEl = document.getElementById('pressure');
+            const visibilityEl = document.getElementById('visibility');
+            const tempMinMaxEl = document.getElementById('tempMinMax');
+            const cloudsEl = document.getElementById('clouds');
+            const sunriseEl = document.getElementById('sunrise');
+            const sunsetEl = document.getElementById('sunset');
+            const updateTimeEl = document.getElementById('updateTime');
+
+            function setDynamicBackground(weatherMain) {
+                const backgrounds = {
+                    'Clear': 'linear-gradient(135deg, #1e1b4b 0%, #2e1065 50%, #701a75 100%)',
+                    'Clouds': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+                    'Rain': 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #1d4ed8 100%)',
+                    'Drizzle': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%)',
+                    'Thunderstorm': 'linear-gradient(135deg, #090514 0%, #140b24 50%, #3b0764 100%)',
+                    'Snow': 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)',
+                    'Mist': 'linear-gradient(135deg, #0f172a 0%, #1c1917 100%)',
+                    'Haze': 'linear-gradient(135deg, #0f172a 0%, #1c1917 100%)',
+                    'Fog': 'linear-gradient(135deg, #0f172a 0%, #1c1917 100%)'
+                };
+                mainBody.style.background = backgrounds[weatherMain] || 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)';
+            }
+
+            function formatUnixTime(unixTimestamp, timezoneOffset) {
+                const targetDate = new Date((unixTimestamp + timezoneOffset) * 1000);
+                return targetDate.toLocaleTimeString('id-ID', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: 'UTC' 
+                }) + ' Pkl';
+            }
+
+            async function fetchWeather(cityName) {
+                if (!cityName || cityName.trim() === '') {
+                    showError('Silakan masukkan nama kota tujuan terlebih dahulu.');
+                    return;
+                }
+
+                // Sembunyikan panel awalan, hasil cuaca, dan error setiap kali pencarian baru dimulai
+                hideElement(initialStateEl);
+                hideElement(weatherResult);
+                hideElement(errorEl);
+                showElement(loadingEl);
+
+                const apiUrl = `${BASE_URL}?q=${encodeURIComponent(cityName.trim())}&appid=${API_KEY}&units=metric&lang=id`;
+
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        if (response.status === 404) throw new Error('Kota tidak teridentifikasi. Periksa kembali ejaan Anda.');
+                        if (response.status === 401) throw new Error('Koneksi API bermasalah (Invalid Token).');
+                        throw new Error(`Gangguan server internal (${response.status}).`);
+                    }
+
+                    const data = await response.json();
+                    displayWeatherData(data);
+
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    hideElement(loadingEl);
+                }
+            }
+
+            function displayWeatherData(data) {
+                cityNameEl.textContent = `${data.name}, ${data.sys.country}`;
+                weatherDescEl.textContent = data.weather[0].description;
+                tempEl.textContent = Math.round(data.main.temp);
+                feelsLikeEl.textContent = Math.round(data.main.feels_like);
+                humidityEl.textContent = `${data.main.humidity}%`;
+                windSpeedEl.textContent = `${data.wind.speed} m/s`;
+                pressureEl.textContent = `${data.main.pressure} hPa`;
+                cloudsEl.textContent = `${data.clouds.all}%`;
+                
+                const visKm = (data.visibility / 1000).toFixed(1);
+                visibilityEl.textContent = `${visKm} km`;
+
+                tempMinMaxEl.textContent = `${Math.round(data.main.temp_max)}° / ${Math.round(data.main.temp_min)}°`;
+
+                sunriseEl.textContent = formatUnixTime(data.sys.sunrise, data.timezone);
+                sunsetEl.textContent = formatUnixTime(data.sys.sunset, data.timezone);
+
+                const iconCode = data.weather[0].icon;
+                weatherIconEl.src = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
+                weatherIconEl.alt = data.weather[0].description;
+
+                const now = new Date();
+                updateTimeEl.textContent = `Sinkronisasi Terakhir: Hari ini pkl ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+
+                setDynamicBackground(data.weather[0].main);
+                showElement(weatherResult);
+
+                weatherResult.classList.remove('animate-fade-in-up');
+                void weatherResult.offsetWidth; 
+                weatherResult.classList.add('animate-fade-in-up');
+            }
+
+            function showError(message) {
+                errorText.textContent = message;
+                showElement(errorEl);
+                // Jika error terjadi di awal, panel awalan tetap disembunyikan agar fokus ke error
+                hideElement(initialStateEl); 
+            }
+
+            function showElement(el) { el.classList.remove('hidden'); }
+            function hideElement(el) { el.classList.add('hidden'); }
+
+            // Event Triggers
+            searchBtn.addEventListener('click', () => fetchWeather(cityInput.value));
+            cityInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchWeather(cityInput.value); });
+            
+            // Fokus otomatis pada kolom input saat halaman dimuat
+            cityInput.focus();
+        })();
+    </script>
+</body>
+</html>
